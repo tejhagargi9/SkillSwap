@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import "./App.css";
+import HomePage from "./Pages/HomePage";
+import Navbar from "./Components/Navbar";
+import Signup from "./Pages/SignupPage";
+import Login from "./Pages/LoginPage";
+import SkillMatchingPage from "./Pages/SkillMatching";
+import UserProfilePage from "./Pages/UserProfile";
+import ChatSessionPage from "./Pages/ChatSessionPage";
+import AILearningResourceGenerator from "./Pages/AiResourceGenerator";
+import UserDashboard from "./Pages/Dashboard";
+import { Provider } from "react-redux";
+import { store } from "../Store/store";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Provider store={store}>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/skillMatching" element={<SkillMatchingPage />} />
+          <Route path="/userProfile" element={<UserProfilePage />} />
+          <Route path="/chatSession" element={<ChatSessionPage />} />
+          <Route path="/aiLearning" element={<AILearningResourceGenerator />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
+        </Routes>
+      </Router>
+    </Provider>
+  );
 }
 
-export default App
+export default App;
