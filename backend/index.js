@@ -1,17 +1,41 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const passport = require("passport");
 require("dotenv").config();
 
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173', 
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session Configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Add this to your .env
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions'
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production' // Use HTTPS in production
+  }
+}));
+
+// Passport Initialization
+require("./passport"); // Create this file (see below)
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Database Connection
 if (!process.env.MONGODB_URI) {
@@ -27,13 +51,13 @@ mongoose.connect(process.env.MONGODB_URI)
   });
 
 // Import routes
-const getAllUsersRoute = require("./routes/getAll")
+const getAllUsersRoute = require("./routes/getAll");
 const signupRoute = require("./routes/signup");
 const loginRoute = require("./routes/login");
 const matchingRoute = require("./routes/getMatchUsers");
 const getUserRoute = require("./routes/getUser");
 const generateSmartRoute = require("./routes/generateSmartMsg");
-
+const googleAuthRoute = require("./routes/googleAuth"); // Add Google OAuth routes
 
 // User routes
 app.use(signupRoute);
@@ -42,6 +66,7 @@ app.use(getAllUsersRoute);
 app.use(matchingRoute);
 app.use(getUserRoute);
 app.use(generateSmartRoute);
+app.use("/auth", googleAuthRoute); // Mount Google OAuth routes under /auth
 
 // Basic Route
 app.get("/", (req, res) => {

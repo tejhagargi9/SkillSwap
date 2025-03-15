@@ -14,10 +14,9 @@ const userSchema = new mongoose.Schema({
       "Please add a valid email",
     ],
   },
+  googleId: String,
   password: {
     type: String,
-    required: [true, "Please add a password"],
-    minlength: 6,
   },
   bio: {
     type: String,
@@ -25,7 +24,8 @@ const userSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png "
+    default:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png ",
   },
   teachSkills: [
     {
@@ -35,14 +35,14 @@ const userSchema = new mongoose.Schema({
       },
       tag: {
         type: String,
-        default: "Other"
+        default: "Other",
       },
       proficiency: {
         type: String,
         enum: ["Beginner", "Intermediate", "Advanced"],
-        default: "Intermediate"
-      }
-    }
+        default: "Intermediate",
+      },
+    },
   ],
   learnSkills: {
     type: [String],

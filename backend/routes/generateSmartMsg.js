@@ -81,13 +81,10 @@ router.post("/generateSmart", async (req, res) => {
       cleanedResponse = rawResponse.split("```json")[1].split("```")[0].trim();
     }
 
-    // Log the cleaned response for debugging
     console.log("Cleaned Response:", cleanedResponse);
 
-    // Parse the cleaned response into a JSON object
     const recommendations = JSON.parse(cleanedResponse);
 
-    // Send the parsed JSON object as the response
     res.status(200).json(recommendations);
   } catch (error) {
     console.error("Error generating smart recommendations:", error);
