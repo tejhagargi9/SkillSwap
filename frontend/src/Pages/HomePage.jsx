@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 
 const HomePage = () => {
@@ -15,6 +16,12 @@ const HomePage = () => {
       navigate('/login')
     }
   }
+
+  useEffect(() => {
+    axios.get("http://localhost:3000/auth/current_user", { withCredentials: true })
+      .then(res => console.log(res.data))
+      .catch(console.error);
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}

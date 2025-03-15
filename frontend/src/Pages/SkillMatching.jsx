@@ -55,23 +55,23 @@ const SkillMatchingPage = () => {
     fetchInitialUsers();
   }, [BACKEND_URL]);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get(`${BACKEND_URL}/getUser`, {
-          params: { userId }, // Correct way to pass query parameters
-        });
-        setUser(response.data);
-        console.log(response.data);
-      } catch (err) {
-        setError("Failed to fetch user details");
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const response = await axios.get(`${BACKEND_URL}/getUser`, {
+            params: { userId }, // Correct way to pass query parameters
+          });
+          setUser(response.data);
+          console.log(response.data);
+        } catch (err) {
+          setError("Failed to fetch user details");
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    if (userId) fetchUser();
-  }, [userId]);
+      if (userId) fetchUser();
+    }, [userId]);
 
   // Popular skills for suggestions
   const popularSkills = [

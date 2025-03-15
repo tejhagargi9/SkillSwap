@@ -8,7 +8,7 @@ import SkillMatchingPage from "./Pages/SkillMatching";
 import UserProfilePage from "./Pages/UserProfile";
 import ChatSessionPage from "./Pages/ChatSessionPage";
 import AILearningResourceGenerator from "./Pages/AiResourceGenerator";
-import UserDashboard from "./Pages/Dashboard";
+import AccountPage from "./Pages/AccountPage";
 import { Provider } from "react-redux";
 import { store } from "../Store/store";
 
@@ -25,7 +25,7 @@ function App() {
           <Route path="/userProfile" element={<UserProfilePage />} />
           <Route path="/chatSession" element={<ChatSessionPage />} />
           <Route path="/aiLearning" element={<AILearningResourceGenerator />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/account" element={<AccountPage />} />
         </Routes>
       </Router>
     </Provider>
