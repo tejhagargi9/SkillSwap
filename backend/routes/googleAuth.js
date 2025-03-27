@@ -12,7 +12,7 @@ router.get("/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
     // Redirect to frontend with userId as a query parameter
-    res.redirect(`${process.env.FRONTEND_ORIGIN}/login?userId=${req.user._id}`);
+    res.redirect(`${process.env.FRONTEND_URL}/login?userId=${req.user._id}`);
   }
 );
 
@@ -24,7 +24,7 @@ router.get("/current_user", (req, res) => {
 // Logout
 router.get("/logout", (req, res) => {
   req.logout(() => {
-    res.redirect(process.env.FRONTEND_ORIGIN || 'http://localhost:5173');
+    res.redirect(process.env.FRONTEND_URL);
   });
 });
 

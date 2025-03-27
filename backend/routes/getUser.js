@@ -4,7 +4,7 @@ const User = require('../models/userModel'); // Adjust path to your User model
 
 // Get user details by userId (using query params)
 router.get('/getUser', async (req, res) => {
-  const { userId } = req.query; // Correct for GET requests
+  const { userId } = req.body; // Correct for GET requests
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }

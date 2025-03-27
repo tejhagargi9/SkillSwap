@@ -4,8 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 
 router.post("/signup", async (req, res) => {
-  const { fullName, email, password, teachSkills, learnSkills } = req.body;
-  console.log(req.body);
+  const { fullName, email, password } = req.body;
 
   try {
     // Simple validation
@@ -27,27 +26,11 @@ router.post("/signup", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Process teachSkills array
-    const formattedTeachSkills = teachSkills
-      .filter((skillObj) => skillObj.skill && skillObj.skill.trim())
-      .map((skillObj) => ({
-        skill: skillObj.skill.trim(),
-        tag: skillObj.tag ? skillObj.tag.trim() : "Other",
-        proficiency: skillObj.proficiency || "Intermediate",
-      }));
-
-    // Process learnSkills array
-    const formattedLearnSkills = learnSkills
-      .filter((skill) => skill && skill.trim())
-      .map((skill) => skill.trim());
-
     // Create new user
     const newUser = new User({
       fullName,
       email: email.toLowerCase(),
       password: hashedPassword,
-      teachSkills: formattedTeachSkills,
-      learnSkills: formattedLearnSkills,
       createdAt: Date.now(),
     });
 
@@ -59,8 +42,6 @@ router.post("/signup", async (req, res) => {
       _id: savedUser._id,
       fullName: savedUser.fullName,
       email: savedUser.email,
-      teachSkills: savedUser.teachSkills,
-      learnSkills: savedUser.learnSkills,
       createdAt: savedUser.createdAt,
     };
 

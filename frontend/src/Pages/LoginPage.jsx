@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login } from "../../Store/userSlice";
+import { login } from "../../store/userSlice";
 import axios from "axios";
 
 const Login = () => {
@@ -67,7 +67,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.open("http://localhost:3000/auth/google", "_self");
+    window.open(`${BACKEND_URL}/auth/google`, "_self");
     localStorage.setItem("isLogin", true);
     dispatch(login());
   };

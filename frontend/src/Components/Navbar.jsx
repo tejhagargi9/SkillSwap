@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectIsLoggedIn } from '../../Store/userSlice';
+import { selectIsLoggedIn } from '../../store/userSlice';
 
 const Navbar = () => {
   // Get login status from Redux store
@@ -15,14 +15,14 @@ const Navbar = () => {
         <div className="flex items-center">
           <Link to="/" className="text-xl font-bold text-indigo-600">SkillSwap</Link>
         </div>
-        
+
         {/* Middle - Navigation Menu */}
         <div className="flex space-x-8">
           <Link to="/discover" className="text-gray-700 hover:text-indigo-600 font-medium">Discover</Link>
           <Link to="/how-it-works" className="text-gray-700 hover:text-indigo-600 font-medium">How It Works</Link>
           <Link to="/skillMatching" className="text-gray-700 hover:text-indigo-600 font-medium">Skill Match</Link>
         </div>
-        
+
         {/* Right Side - Conditional Auth Buttons */}
         <div className="flex space-x-4">
           {isLoggedIn ? (
