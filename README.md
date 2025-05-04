@@ -1,0 +1,1 @@
+SkillSwap is a web application that allows users to exchange skills by sending and accepting skill-based requests. Built with React, Node.js, Express, and MongoDB, it features real-time request notifications, user authentication, and a chat-ready architecture.
