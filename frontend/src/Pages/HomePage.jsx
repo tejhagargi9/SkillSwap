@@ -1,25 +1,25 @@
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import axios from "axios";
 
-
 const HomePage = () => {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const isLoggedIn = localStorage.getItem("isLogin");
 
   const redirect = () => {
-    const isLoggedIn = localStorage.getItem('isLogin')
-    if(isLoggedIn === "true") {
-      navigate('/skillMatching')
+    const isLoggedIn = localStorage.getItem("isLogin");
+    if (isLoggedIn == "true") {
+      navigate("/skillMatching");
     } else {
-      navigate('/login')
+      navigate("/login");
     }
-  }
+  };
 
   useEffect(() => {
-    axios.get("http://localhost:3000/auth/current_user", { withCredentials: true })
-      .then(res => console.log(res.data))
+    axios
+      .get("http://localhost:3000/auth/current_user", { withCredentials: true })
+      .then((res) => console.log(res.data))
       .catch(console.error);
   }, []);
   return (
@@ -59,7 +59,10 @@ const HomePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.7 }}
           >
-            <button onClick={redirect} className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg">
+            <button
+              onClick={redirect}
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+            >
               Start Swapping Skills
             </button>
           </motion.div>
@@ -259,41 +262,46 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 md:px-12 lg:px-24 bg-blue-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-          >
-            Ready to Start Your Skill Exchange Journey?
-          </motion.h2>
-          <motion.p
-            className="text-blue-100 mb-8 text-lg"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, duration: 0.7 }}
-          >
-            Join our community of students sharing skills and growing together.
-          </motion.p>
-          <Link to="/signup">
-            <motion.button
-              className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg text-lg"
+      {isLoggedIn === "true" ? (
+        ""
+      ) : (
+        <section className="py-16 px-4 md:px-12 lg:px-24 bg-blue-600 text-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.h2
+              className="text-3xl md:text-4xl font-bold mb-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.4, duration: 0.7 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.7 }}
             >
-              Sign Up Now - It's Free
-            </motion.button>
-          </Link>
-        </div>
-      </section>
+              Ready to Start Your Skill Exchange Journey?
+            </motion.h2>
+            <motion.p
+              className="text-blue-100 mb-8 text-lg"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.7 }}
+            >
+              Join our community of students sharing skills and growing
+              together.
+            </motion.p>
+            <Link to="/signup">
+              <motion.button
+                className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg text-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4, duration: 0.7 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Sign Up Now - It's Free
+              </motion.button>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="py-8 px-4 bg-gray-800 text-gray-300">

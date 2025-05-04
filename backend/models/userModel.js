@@ -25,25 +25,12 @@ const userSchema = new mongoose.Schema({
   image: {
     type: String,
     default:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png ",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png",
   },
-  teachSkills: [
-    {
-      skill: {
-        type: [String],
-        required: true,
-      },
-      tag: {
-        type: String,
-        default: "Other",
-      },
-      proficiency: {
-        type: String,
-        enum: ["Beginner", "Intermediate", "Advanced"],
-        default: "Intermediate",
-      },
-    },
-  ],
+  teachSkills: {
+    type: [String],
+    default: [],
+  },
   learnSkills: {
     type: [String],
     default: [],

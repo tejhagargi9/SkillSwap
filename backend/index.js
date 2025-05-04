@@ -12,7 +12,7 @@ const app = express();
 app.use(cors({
   origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   credentials: true
-}));
+})); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -57,7 +57,11 @@ const loginRoute = require("./routes/login");
 const matchingRoute = require("./routes/getMatchUsers");
 const getUserRoute = require("./routes/getUser");
 const generateSmartRoute = require("./routes/generateSmartMsg");
-const googleAuthRoute = require("./routes/googleAuth"); // Add Google OAuth routes
+const pushRequests = require("./routes/pushRequests");
+const getRequests = require("./routes/getRequests");
+const updateRequests = require("./routes/updateRequests");
+const getAcceptedUsers = require("./routes/getAcceptedUsers");
+const googleAuthRoute = require("./routes/googleAuth");
 
 // User routes
 app.use(signupRoute);
@@ -66,6 +70,10 @@ app.use(getAllUsersRoute);
 app.use(matchingRoute);
 app.use(getUserRoute);
 app.use(generateSmartRoute);
+app.use(pushRequests);
+app.use(getRequests);
+app.use(updateRequests);
+app.use(getAcceptedUsers);
 app.use("/auth", googleAuthRoute); // Mount Google OAuth routes under /auth
 
 // Basic Route

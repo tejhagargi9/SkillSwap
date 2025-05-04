@@ -7,6 +7,7 @@ import {
   FiFilter,
   FiSliders,
   FiSearch,
+  FiClock,
 } from "react-icons/fi";
 import AiRecommendationsModal from "../Components/AiRecommendationsModal";
 
@@ -35,6 +36,8 @@ const SkillMatchingPage = () => {
   const [isGeneratingRecommendations, setIsGeneratingRecommendations] =
     useState(false);
   const [aiRecommendationsData, setAiRecommendationsData] = useState(null);
+  // Track connection status for each user
+  const [connectionStatus, setConnectionStatus] = useState({});
 
   // Get current user ID from localStorage or context
   const userId = localStorage.getItem("userId");
@@ -45,6 +48,7 @@ const SkillMatchingPage = () => {
       try {
         const response = await axios.get(`${BACKEND_URL}/getAllUsers`);
         setUsers(response.data);
+        console.log("Fetched users:", response.data);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -55,23 +59,23 @@ const SkillMatchingPage = () => {
     fetchInitialUsers();
   }, [BACKEND_URL]);
 
-    useEffect(() => {
-      const fetchUser = async () => {
-        try {
-          const response = await axios.get(`${BACKEND_URL}/getUser`, {
-            params: { userId }, // Correct way to pass query parameters
-          });
-          setUser(response.data);
-          console.log(response.data);
-        } catch (err) {
-          setError("Failed to fetch user details");
-        } finally {
-          setLoading(false);
-        }
-      };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/getUser`, {
+          params: { userId }, // Correct way to pass query parameters
+        });
+        setUser(response.data);
+        console.log(response.data);
+      } catch (err) {
+        setError("Failed to fetch user details", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      if (userId) fetchUser();
-    }, [userId]);
+    if (userId) fetchUser();
+  }, [userId]);
 
   // Popular skills for suggestions
   const popularSkills = [
@@ -148,6 +152,7 @@ const SkillMatchingPage = () => {
       setIsGeneratingRecommendations(false);
     }
   };
+
   // Search for matches based on current filters
   const searchMatches = async () => {
     setSearching(true);
@@ -170,6 +175,36 @@ const SkillMatchingPage = () => {
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       setSearching(false);
+    }
+  };
+
+  // Handle connect button click
+  const handleConnect = async (targetUserId) => {
+    // Update UI immediately for better UX
+    setConnectionStatus({
+      ...connectionStatus,
+      [targetUserId]: "pending",
+    });
+
+    console.log("Connecting with user:", targetUserId);
+    console.log("Current user ID:", userId);
+
+    try {
+      // Send connection request to backend with sender and recipient IDs
+      await axios.post(`${BACKEND_URL}/sendConnectionRequest`, {
+        senderUserId: userId, // from localStorage
+        recipientUserId: targetUserId, // the user they're connecting with
+      });
+
+      console.log(`Connection request sent to user ${targetUserId}`);
+    } catch (err) {
+      // If there's an error, revert the UI status
+      setConnectionStatus({
+        ...connectionStatus,
+        [targetUserId]: null,
+      });
+      console.error("Error sending connection request:", err);
+      setError("Failed to send connection request. Please try again.");
     }
   };
 
@@ -431,20 +466,18 @@ const SkillMatchingPage = () => {
             <h3 className="text-gray-700 mb-3 font-medium">Popular Skills</h3>
             <div className="flex flex-wrap gap-2">
               {popularSkills.map((skill) => (
-                <motion.button
+                <button
                   key={skill}
-                  className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
+                  onClick={() =>
                     setFilters((prev) => ({
                       ...prev,
-                      learnSkill: skill,
-                    }));
-                  }}
+                      learnSkill: skill, // or teachSkill, based on intent
+                    }))
+                  }
+                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition"
                 >
                   {skill}
-                </motion.button>
+                </button>
               ))}
             </div>
           </motion.div>
@@ -569,9 +602,21 @@ const SkillMatchingPage = () => {
                     </div>
                   </div>
 
-                  <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center">
-                    <FiMessageSquare className="mr-2" /> Contact
-                  </button>
+                  {connectionStatus[user._id] === "pending" ? (
+                    <button
+                      className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center cursor-default"
+                      disabled
+                    >
+                      <FiClock className="mr-2" /> Request Pending
+                    </button>
+                  ) : (
+                    <button
+                      className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center"
+                      onClick={() => handleConnect(user._id)}
+                    >
+                      <FiMessageSquare className="mr-2" /> Connect
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </motion.div>
