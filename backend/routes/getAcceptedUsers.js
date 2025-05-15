@@ -2,19 +2,18 @@ const express = require("express");
 const router = express.Router();
 const Message = require("../models/requestsModel");
 
-// GET /acceptedUsers - Return sender's name, recipient's name, and recipientUserId for accepted messages
+// GET /acceptedUsers - Return full sender & recipient user info for accepted messages
 router.get("/acceptedUsers", async (req, res) => {
   try {
     const acceptedMessages = await Message.find({ status: "accepted" })
-      .populate("senderUserId", "fullName") // populate sender's fullName
-      .populate("recipientUserId", "fullName") // populate recipient's fullName
-      .select("senderUserId recipientUserId"); // return sender and recipient fields from Message
+      .populate("senderUserId")       // populate full sender user object
+      .populate("recipientUserId")    // populate full recipient user object
+      .select("senderUserId recipientUserId"); // select only these fields from the message
 
-    // Format result: extract sender, recipient info
+    // Format result: extract sender and recipient full objects
     const results = acceptedMessages.map(msg => ({
-      senderName: msg.senderUserId.fullName, // sender's full name
-      recipientUserId: msg.recipientUserId._id, // recipient's ID
-      recipientName: msg.recipientUserId.fullName, // recipient's full name
+      sender: msg.senderUserId,            // full sender user document (includes _id)
+      recipient: msg.recipientUserId       // full recipient user document (includes _id)
     }));
 
     res.json(results);

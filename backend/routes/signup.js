@@ -3,9 +3,9 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", async (req, res) => {  
   const { fullName, email, password, teachSkills, learnSkills } = req.body;
-  console.log(req.body);
+  console.log("Signp Details : ",req.body);
 
   try {
     // Simple validation
@@ -31,7 +31,7 @@ router.post("/signup", async (req, res) => {
     const formattedTeachSkills = teachSkills
       .filter((skillObj) => skillObj.skill && skillObj.skill.trim())
       .map((skillObj) => ({
-        skill: skillObj.skill.trim(),
+        skill: skillObj.skill.trim(), 
         tag: skillObj.tag ? skillObj.tag.trim() : "Other",
         proficiency: skillObj.proficiency || "Intermediate",
       }));

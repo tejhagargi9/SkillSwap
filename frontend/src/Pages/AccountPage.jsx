@@ -1,847 +1,661 @@
-import React, { useState, useEffect } from "react";
-import {
-  FiUser,
-  FiMapPin,
-  FiMail,
-  FiEdit2,
-  FiSave,
-  FiX,
-  FiLock,
-  FiPhone,
-  FiCalendar,
-  FiBookOpen,
-  FiCheck,
-  FiPlus,
-  FiTrash2,
-  FiAward,
-} from "react-icons/fi";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import {
+  Calendar,
+  Edit,
+  LogOut,
+  Mail,
+  PlusCircle,
+  Share2,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const AccountPage = () => {
-  // User account information
-  const [userAccount, setUserAccount] = useState({
-    fullName: "",
-    email: "",
-    bio: "",
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png",
-    teachSkills: [],
-    learnSkills: [],
-    ratings: 0,
-    createdAt: "",
+export default function UserProfile() {
+  const [user, setUser] = useState({
+    name: "Alex Johnson",
+    email: "alex.johnson@example.com",
+    profilePicture: "/api/placeholder/150/150",
+    joinDate: "May 15, 2023",
+    connections: 142,
+    skillsToTeach: ["JavaScript", "React", "UI/UX Design"],
+    skillsToLearn: ["Python", "Data Science", "Machine Learning"],
+    certifications: [],
   });
 
-  // State for edit mode
-  const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({ ...userAccount });
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [changePassword, setChangePassword] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [certifications, setCertifications] = useState([]);
-  const [newCertification, setNewCertification] = useState({
-    name: "",
-    issuer: "",
-    date: "",
-    url: "",
-  });
-  const [addingCertification, setAddingCertification] = useState(false);
-  const [newTeachSkill, setNewTeachSkill] = useState({
-    skill: "",
-    tag: "Other",
-    proficiency: "Intermediate",
-  });
-  const [newLearnSkill, setNewLearnSkill] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-  // Tags for skills
-  const availableTags = [
-    "Programming",
-    "Language",
-    "Music",
-    "Art",
-    "Sports",
-    "Cooking",
-    "Finance",
-    "Education",
-    "Other",
-  ];
-  const proficiencyLevels = ["Beginner", "Intermediate", "Advanced"];
+  // State for edit modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: user.name,
+    email: user.email,
+    profilePicture: user.profilePicture,
+    skillsToTeach: user.skillsToTeach.join(", "),
+    skillsToLearn: user.skillsToLearn.join(", "),
+  });
 
-  // Fetch user data on component mount
+  // File input reference
+  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  // State for certification modal
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [newCert, setNewCert] = useState({ name: "", link: "", date: "" });
+  const [currentUser, setCurrentUser] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUser = async () => {
       try {
-        // In a real app, you'd get the userId from context/state/URL
-        const userId = localStorage.getItem("userId"); // Example ID
-        const response = await axios.get(`${BACKEND_URL}/getUser`, {
-          params: { userId }, // Correct way to pass query parameters
-        });
-        const userData = response.data;
+        const res = await axios.get(`${BACKEND_URL}/getAllUsers`);
+        const users = res.data;
 
+        const matchedUser = users.find((user) => user._id === userId);
 
-        // Format date from ISO to readable format
-        const joinDate = new Date(userData.createdAt).toLocaleDateString(
-          "en-US",
-          {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }
-        );
+        if (matchedUser) {
+          setCurrentUser(matchedUser);
+          setEditFormData({
+            name: matchedUser.fullName,
+            email: matchedUser.email,
+            profilePicture: matchedUser.image,
+            skillsToTeach: matchedUser.teachSkills.join(", "),
+            skillsToLearn: matchedUser.learnSkills.join(", "),
+          });
+          setPreviewUrl(matchedUser.image);
+        }
 
-        setUserAccount({
-          ...userData,
-          createdAt: joinDate,
-        });
-        setFormData({
-          ...userData,
-          createdAt: joinDate,
-        });
-
-        console.log("details : ",formData)
-
-        // For demonstration, initialize with sample certifications
-        setCertifications([
-          {
-            id: 1,
-            name: "Web Development",
-            issuer: "Udemy",
-            date: "2023-05-15",
-            url: "https://udemy.com/certificate/123",
-          },
-          {
-            id: 2,
-            name: "React Advanced",
-            issuer: "Coursera",
-            date: "2023-10-22",
-            url: "https://coursera.org/verify/456",
-          },
-        ]);
-
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-        setError("Failed to load user data");
-        setIsLoading(false);
+        console.log("Fetched users:", users);
+        console.log("Matched user:", matchedUser);
+      } catch (error) {
+        console.error("Error fetching users:", error);
       }
     };
 
-    fetchUserData();
-  }, []);
+    if (userId) {
+      fetchUser();
+    }
+  }, [userId]);
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
 
-  // Handle password form changes
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Handle new teach skill input
-  const handleTeachSkillChange = (e) => {
-    const { name, value } = e.target;
-    setNewTeachSkill((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Add new teach skill
-  const handleAddTeachSkill = () => {
-    if (newTeachSkill.skill.trim() === "") return;
-
-    setFormData((prev) => ({
-      ...prev,
-      teachSkills: [
-        ...prev.teachSkills,
-        {
-          skill: [newTeachSkill.skill.trim()],
-          tag: newTeachSkill.tag,
-          proficiency: newTeachSkill.proficiency,
-        },
-      ],
-    }));
-
-    setNewTeachSkill({ skill: "", tag: "Other", proficiency: "Intermediate" });
-  };
-
-  // Remove teach skill
-  const handleRemoveTeachSkill = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      teachSkills: prev.teachSkills.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Add new learn skill
-  const handleAddLearnSkill = () => {
-    if (newLearnSkill.trim() === "") return;
-
-    setFormData((prev) => ({
-      ...prev,
-      learnSkills: [...prev.learnSkills, newLearnSkill.trim()],
-    }));
-
-    setNewLearnSkill("");
-  };
-
-  // Remove learn skill
-  const handleRemoveLearnSkill = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      learnSkills: prev.learnSkills.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Handle certification input changes
-  const handleCertificationChange = (e) => {
-    const { name, value } = e.target;
-    setNewCertification((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Add new certification
-  const handleAddCertification = () => {
-    if (
-      newCertification.name.trim() === "" ||
-      newCertification.issuer.trim() === ""
-    )
-      return;
-
-    const newCert = {
-      id: Date.now(),
-      ...newCertification,
-    };
-
-    setCertifications((prev) => [...prev, newCert]);
-    setNewCertification({ name: "", issuer: "", date: "", url: "" });
-    setAddingCertification(false);
-  };
-
-  // Remove certification
-  const handleRemoveCertification = (id) => {
-    setCertifications((prev) => prev.filter((cert) => cert.id !== id));
-  };
-
-  // Save profile changes
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    try {
-      // Here you would typically send data to your backend
-      // const response = await axios.put(`/api/users/update/${userAccount._id}`, formData);
-      setUserAccount(formData);
-      setEditMode(false);
-      setSuccessMessage("Profile updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      setError("Failed to update profile");
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Save password changes
-  const handleSavePassword = async (e) => {
-    e.preventDefault();
-    try {
-      // Here you would typically validate and send data to your backend
-      // const response = await axios.put(`/api/users/update-password/${userAccount._id}`, passwordForm);
-      setChangePassword(false);
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      setSuccessMessage("Password updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error("Error updating password:", err);
-      setError("Failed to update password");
-    }
+  // Trigger file input click
+  const handleChooseFile = () => {
+    fileInputRef.current.click();
   };
 
-  // Cancel edit mode
-  const handleCancel = () => {
-    setEditMode(false);
-    setFormData({ ...userAccount });
-  };
-
-  // Cancel password change
-  const handleCancelPassword = () => {
-    setChangePassword(false);
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+  // Handle profile edit form changes
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center">
-        Loading...
-      </div>
-    );
-  }
+  // Handle profile edit form submission
+  const handleEditFormSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setIsUpdatingProfile(true);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-red-500">
-        {error}
-      </div>
-    );
-  }
+    try {
+      const formData = new FormData();
+      formData.append("userId", userId);
+      formData.append("fullName", editFormData.name);
+      formData.append("email", editFormData.email);
+      formData.append(
+        "teachSkills",
+        JSON.stringify(
+          editFormData.skillsToTeach
+            .split(",")
+            .map((skill) => ({
+              skill: skill.trim(),
+              tag: "",
+              proficiency: "Beginner",
+            }))
+            .filter((skillObj) => skillObj.skill) // filter out empty strings
+        )
+      );
+
+      formData.append(
+        "learnSkills",
+        JSON.stringify(
+          editFormData.skillsToLearn
+            .split(",")
+            .map((skill) => skill.trim())
+            .filter(Boolean)
+        )
+      );
+
+      if (selectedFile) {
+        formData.append("profileImage", selectedFile);
+      }
+
+      const response = await axios.put(
+        `${BACKEND_URL}/updateProfile`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setCurrentUser(response.data.user);
+        setSelectedFile(null);
+        setIsEditModalOpen(false);
+      } else {
+        alert("Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Error updating profile. Please try again.");
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  // Handle certification form changes
+  const handleCertFormChange = (e) => {
+    const { name, value } = e.target;
+    setNewCert({
+      ...newCert,
+      [name]: value,
+    });
+  };
+
+  // Handle certification form submission
+  const handleCertFormSubmit = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!newCert.name || !newCert.date) {
+      alert("Please fill in the required fields");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Send certification to the database
+      const response = await axios.post(`${BACKEND_URL}/addCertifications`, {
+        userId: userId,
+        certification: {
+          name: newCert.name,
+          link: newCert.link,
+          date: newCert.date,
+        },
+      });
+
+      if (response.data.success) {
+        // Update the local user data with the updated user from the server
+        setCurrentUser(response.data.user);
+
+        // Reset the form
+        setNewCert({ name: "", link: "", date: "" });
+        setIsCertModalOpen(false);
+      } else {
+        alert("Failed to add certification");
+      }
+    } catch (error) {
+      console.error("Error adding certification:", error);
+      alert("Error adding certification. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle delete certification
+  const handleDeleteCert = async (certId) => {
+    if (
+      !window.confirm("Are you sure you want to delete this certification?")
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await axios.delete(
+        `${BACKEND_URL}/user/certifications`,
+        {
+          data: {
+            userId: userId,
+            certificationId: certId,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // Update the local user data with the updated user from the server
+        setCurrentUser(response.data.user);
+      } else {
+        alert("Failed to delete certification");
+      }
+    } catch (error) {
+      console.error("Error deleting certification:", error);
+      alert("Error deleting certification. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      // Clear localStorage
+      localStorage.removeItem("isLogin");
+      localStorage.removeItem("userId");
+      // Redirect to login page
+      window.location.href = "/login";
+      
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">
-          Account Settings
-        </h1>
-
-        {successMessage && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex items-center">
-            <FiCheck className="text-green-500 mr-2" />
-            {successMessage}
-          </div>
-        )}
-
-        {/* Profile Information Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-              <FiUser className="mr-2 text-blue-500" />
-              Profile Information
-            </h2>
-            {!editMode && (
-              <button
-                onClick={() => setEditMode(true)}
-                className="flex items-center text-blue-500 hover:text-blue-700"
-              >
-                <FiEdit2 className="mr-1" />
-                Edit
-              </button>
-            )}
-          </div>
-
-          {editMode ? (
-            <form onSubmit={handleSaveProfile}>
-              <div className="flex flex-col md:flex-row mb-6">
-                <div className="md:w-1/3 flex justify-center mb-4 md:mb-0">
-                  <div className="relative">
-                    <img
-                      src={formData.image}
-                      alt={formData.fullName}
-                      className="w-32 h-32 rounded-full object-cover border-2 border-blue-500"
-                    />
-                    <button
-                      type="button"
-                      className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full"
-                    >
-                      <FiEdit2 size={16} />
-                    </button>
-                  </div>
-                </div>
-                <div className="md:w-2/3 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bio
-                    </label>
-                    <textarea
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              {/* Skills I Can Teach Section */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Skills I Can Teach
-                </h3>
-                <div className="space-y-3">
-                  {formData.teachSkills.map((skill, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-gray-50 p-3 rounded-md"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {skill.skill.join(", ")}
-                        </span>
-                        <div className="flex space-x-2 text-sm text-gray-600">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
-                            {skill.tag}
-                          </span>
-                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md">
-                            {skill.proficiency}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTeachSkill(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  ))}
-
-                  <div className="flex flex-col space-y-2 bg-gray-50 p-3 rounded-md">
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        name="skill"
-                        value={newTeachSkill.skill}
-                        onChange={handleTeachSkillChange}
-                        placeholder="Add a skill to teach"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <select
-                        name="tag"
-                        value={newTeachSkill.tag}
-                        onChange={handleTeachSkillChange}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {availableTags.map((tag) => (
-                          <option key={tag} value={tag}>
-                            {tag}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        name="proficiency"
-                        value={newTeachSkill.proficiency}
-                        onChange={handleTeachSkillChange}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {proficiencyLevels.map((level) => (
-                          <option key={level} value={level}>
-                            {level}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddTeachSkill}
-                      className="self-start flex items-center text-blue-500 hover:text-blue-700"
-                    >
-                      <FiPlus className="mr-1" />
-                      Add Skill
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Skills I Want to Learn Section */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Skills I Want to Learn
-                </h3>
-                <div className="space-y-3">
-                  {formData.learnSkills.map((skill, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-gray-50 p-3 rounded-md"
-                    >
-                      <span>{skill}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveLearnSkill(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  ))}
-
-                  <div className="flex space-x-2 bg-gray-50 p-3 rounded-md">
-                    <input
-                      type="text"
-                      value={newLearnSkill}
-                      onChange={(e) => setNewLearnSkill(e.target.value)}
-                      placeholder="Add a skill to learn"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddLearnSkill}
-                      className="flex items-center text-blue-500 hover:text-blue-700"
-                    >
-                      <FiPlus className="mr-1" />
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex flex-col">
-              <div className="flex flex-col md:flex-row mb-6">
-                <div className="md:w-1/3 flex justify-center mb-4 md:mb-0">
-                  <img
-                    src={userAccount.image}
-                    alt={userAccount.fullName}
-                    className="w-32 h-32 rounded-full object-cover border-2 border-blue-500"
-                  />
-                </div>
-                <div className="md:w-2/3 space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {userAccount.fullName}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mt-1">
-                      <FiCalendar className="mr-2" />
-                      <span>Member since {userAccount.createdAt}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <FiMail className="text-blue-500 mr-2" />
-                    <span>{userAccount.email}</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <FiBookOpen className="text-blue-500 mr-2" />
-                      <span className="font-medium">Bio</span>
-                    </div>
-                    <p className="text-gray-600">
-                      {userAccount.bio || "No bio added yet."}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="flex items-center mr-3">
-                      <FiCheck className="text-green-500 mr-1" />
-                      <span>Rating: {userAccount.ratings}/5</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Skills Display */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Skills I Can Teach
-                </h3>
-                {userAccount.teachSkills.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {userAccount.teachSkills.map((skill, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-md">
-                        <div className="font-medium">
-                          {skill.skill.join(", ")}
-                        </div>
-                        <div className="flex space-x-2 mt-1">
-                          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
-                            {skill.tag}
-                          </span>
-                          <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-md">
-                            {skill.proficiency}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">No teaching skills added yet.</p>
-                )}
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Skills I Want to Learn
-                </h3>
-                {userAccount.learnSkills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {userAccount.learnSkills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="bg-gray-50 px-3 py-2 rounded-md"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">No learning skills added yet.</p>
-                )}
-              </div>
-            </div>
-          )}
+    <div className="bg-gray-50 min-h-screen pb-12">
+      {/* Header */}
+      <div className="bg-white shadow">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
         </div>
+      </div>
 
-        {/* Password Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-              <FiLock className="mr-2 text-blue-500" />
-              Password
-            </h2>
-            {!changePassword && (
-              <button
-                onClick={() => setChangePassword(true)}
-                className="flex items-center text-blue-500 hover:text-blue-700"
-              >
-                <FiEdit2 className="mr-1" />
-                Change Password
-              </button>
-            )}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Profile Card */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          {/* Profile Header */}
+          <div className="relative h-48 bg-gradient-to-r from-blue-500 to-indigo-600">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="absolute top-4 right-4 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
+            >
+              <Edit className="w-5 h-5 text-gray-700" />
+            </button>
           </div>
 
-          {changePassword ? (
-            <form onSubmit={handleSavePassword}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+          {/* Profile Info */}
+          <div className="px-6 pt-16 pb-6 relative">
+            <div className="absolute -top-16 left-6">
+              <img
+                src={currentUser?.image}
+                alt={currentUser?.fullName}
+                className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {currentUser?.fullName}
+                </h2>
+                <div className="flex items-center mt-1 text-gray-600">
+                  <Mail className="w-4 h-4 mr-2" />
+                  <span>{currentUser?.email}</span>
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 mt-4">
+              <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                {/* Logout Button */}
                 <button
-                  type="button"
-                  onClick={handleCancelPassword}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1 text-red-600 hover:text-red-800 transition"
                 >
-                  Cancel
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Update Password
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex items-center">
-              <div className="w-full bg-gray-100 rounded-md px-4 py-3 text-gray-600">
-                ••••••••••••••
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <Calendar className="w-4 h-4" />
+                  <span>
+                    Joined{" "}
+                    {currentUser?.createdAt &&
+                      new Date(currentUser.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <Share2 className="w-4 h-4" />
+                  <span>{currentUser?.matches?.length || 0} connections</span>
+                </div>
               </div>
             </div>
-          )}
+
+            {/* Skills Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Skills I Teach
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentUser?.teachSkills?.map((skillObj, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {skillObj.skill} {/* or any other property you want */}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Skills I Want to Learn
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentUser?.learnSkills?.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Certifications Card */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow mt-6 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-              <FiAward className="mr-2 text-blue-500" />
+            <h3 className="text-xl font-semibold text-gray-900">
               Certifications
-            </h2>
-            {!addingCertification && (
-              <button
-                onClick={() => setAddingCertification(true)}
-                className="flex items-center text-blue-500 hover:text-blue-700"
-              >
-                <FiPlus className="mr-1" />
-                Add Certification
-              </button>
-            )}
+            </h3>
+            <button
+              onClick={() => setIsCertModalOpen(true)}
+              className="flex items-center text-blue-600 hover:text-blue-800 transition"
+            >
+              <PlusCircle className="w-5 h-5 mr-1" />
+              <span>Add Certification</span>
+            </button>
           </div>
 
-          {addingCertification ? (
-            <div className="space-y-4 mb-6 bg-gray-50 p-4 rounded-md">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Certification Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={newCertification.name}
-                  onChange={handleCertificationChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Issuing Organization
-                </label>
-                <input
-                  type="text"
-                  name="issuer"
-                  value={newCertification.issuer}
-                  onChange={handleCertificationChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Issue Date
-                </label>
-                <input
-                  type="date"
-                  name="date"
-                  value={newCertification.date}
-                  onChange={handleCertificationChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Credential URL (optional)
-                </label>
-                <input
-                  type="url"
-                  name="url"
-                  value={newCertification.url}
-                  onChange={handleCertificationChange}
-                  placeholder="https://example.com/verify/123"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setAddingCertification(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddCertification}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Add Certification
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {certifications.length > 0 ? (
-            <div className="space-y-3">
-              {certifications.map((cert) => (
+          {currentUser?.certifications &&
+          currentUser.certifications.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {currentUser.certifications.map((cert) => (
                 <div
-                  key={cert.id}
-                  className="flex justify-between items-center bg-gray-50 p-3 rounded-md"
+                  key={cert._id}
+                  className="py-4 flex justify-between items-center"
                 >
                   <div>
-                    <div className="font-medium">{cert.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {cert.issuer} • {new Date(cert.date).toLocaleDateString()}
+                    <h4 className="font-medium text-gray-900">{cert.name}</h4>
+                    <div className="text-sm text-gray-500">
+                      Issued: {cert.date}
                     </div>
-                    {cert.url && (
+                    {cert.link && (
                       <a
-                        href={cert.url}
+                        href={cert.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 text-sm"
+                        className="text-sm text-blue-600 hover:underline"
                       >
-                        View Credential
+                        View credential
                       </a>
                     )}
                   </div>
                   <button
-                    type="button"
-                    onClick={() => handleRemoveCertification(cert.id)}
-                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleDeleteCert(cert._id)}
+                    className="text-gray-400 hover:text-red-500 transition"
+                    disabled={isLoading}
                   >
-                    <FiTrash2 />
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-600">No certifications added yet.</p>
+            <div className="py-8 text-center text-gray-500">
+              <User className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+              <p>You haven't added any certifications yet</p>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center border-b px-6 py-4">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Edit Profile
+              </h3>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Profile Picture
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={previewUrl || editFormData.profilePicture}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleChooseFile}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={editFormData.email}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="skillsToTeach"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Skills to Teach (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    id="skillsToTeach"
+                    name="skillsToTeach"
+                    value={editFormData.skillsToTeach}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="skillsToLearn"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Skills to Learn (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    id="skillsToLearn"
+                    name="skillsToLearn"
+                    value={editFormData.skillsToLearn}
+                    onChange={handleEditFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={isUpdatingProfile}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditFormSubmit}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isUpdatingProfile}
+                >
+                  {isUpdatingProfile ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Certification Modal */}
+      {isCertModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center border-b px-6 py-4">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Add Certification
+              </h3>
+              <button
+                onClick={() => setIsCertModalOpen(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCertFormSubmit} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="certName"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Certification Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="certName"
+                    name="name"
+                    value={newCert.name}
+                    onChange={handleCertFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="certLink"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Credential Link (optional)
+                  </label>
+                  <input
+                    type="url"
+                    id="certLink"
+                    name="link"
+                    value={newCert.link}
+                    onChange={handleCertFormChange}
+                    placeholder="https://example.com/credential"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="certDate"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Issue Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="certDate"
+                    name="date"
+                    value={newCert.date}
+                    onChange={handleCertFormChange}
+                    placeholder="May 2023"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCertModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Adding..." : "Add Certification"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default AccountPage;
+}
