@@ -3,8 +3,14 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 
+<<<<<<< HEAD
 router.post("/signup", async (req, res) => {
   const { fullName, email, password } = req.body;
+=======
+router.post("/signup", async (req, res) => {  
+  const { fullName, email, password, teachSkills, learnSkills } = req.body;
+  console.log("Signp Details : ",req.body);
+>>>>>>> tejDev
 
   try {
     // Simple validation
@@ -26,6 +32,23 @@ router.post("/signup", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+<<<<<<< HEAD
+=======
+    // Process teachSkills array
+    const formattedTeachSkills = teachSkills
+      .filter((skillObj) => skillObj.skill && skillObj.skill.trim())
+      .map((skillObj) => ({
+        skill: skillObj.skill.trim(), 
+        tag: skillObj.tag ? skillObj.tag.trim() : "Other",
+        proficiency: skillObj.proficiency || "Intermediate",
+      }));
+
+    // Process learnSkills array
+    const formattedLearnSkills = learnSkills
+      .filter((skill) => skill && skill.trim())
+      .map((skill) => skill.trim());
+
+>>>>>>> tejDev
     // Create new user
     const newUser = new User({
       fullName,

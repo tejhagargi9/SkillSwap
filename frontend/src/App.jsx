@@ -1,10 +1,23 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
+<<<<<<< HEAD
 import HomePage from "./pages/HomePage";
 import Navbar from "./components/Navbar";
 import Signup from "./pages/SignupPage";
 import Login from "./pages/LoginPage";
 import AccountPage from "./pages/AccountPage";
+=======
+import HomePage from "./Pages/HomePage";
+import Navbar from "./Components/Navbar";
+import Signup from "./Pages/SignupPage";
+import Login from "./Pages/LoginPage";
+import SkillMatchingPage from "./Pages/SkillMatching";
+import UserProfilePage from "./Pages/UserProfile";
+import AILearningResourceGenerator from "./Pages/AiResourceGenerator";
+import AccountPage from "./Pages/AccountPage";
+import Chat from "./Pages/Chat";
+import Working from "./Pages/Working";
+>>>>>>> tejDev
 import { Provider } from "react-redux";
 import { store } from "../store/store";
 
@@ -17,7 +30,15 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+<<<<<<< HEAD
+=======
+          <Route path="/skillMatching" element={<SkillMatchingPage />} />
+          <Route path="/userProfile" element={<UserProfilePage />} />
+          <Route path="/aiLearning" element={<AILearningResourceGenerator />} />
+>>>>>>> tejDev
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/working" element={<Working />} />
         </Routes>
       </Router>
     </Provider>
