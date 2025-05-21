@@ -37,8 +37,10 @@ const Signup = () => {
     learnSkills: [""],
     agreeToTerms: false,
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [success, setSuccess] = useState(false);
   const [customTagInput, setCustomTagInput] = useState("");
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -57,6 +59,18 @@ const Signup = () => {
       navigate("/");
     }
   }, [location, dispatch, navigate]);
+
+  // Check passwords match whenever either password field changes
+  useEffect(() => {
+    if (
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    ) {
+      setPasswordError("Passwords do not match");
+    } else {
+      setPasswordError("");
+    }
+  }, [formData.password, formData.confirmPassword]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -137,6 +151,17 @@ const Signup = () => {
   };
 
   const nextStep = () => {
+    // For step 1, validate passwords before proceeding
+    if (step === 1) {
+      if (formData.password !== formData.confirmPassword) {
+        setPasswordError("Passwords do not match");
+        return;
+      }
+      if (!formData.password) {
+        setPasswordError("Password is required");
+        return;
+      }
+    }
     setStep(step + 1);
   };
 
@@ -159,7 +184,6 @@ const Signup = () => {
     }
 
     // Prepare data for backend
-    // Inside the handleSubmit function
     const formattedData = {
       fullName: formData.fullName.trim(),
       email: formData.email.toLowerCase().trim(),
@@ -376,7 +400,15 @@ const Signup = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border ${
+                    passwordError ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:outline-none focus:ring-2 ${
+                    passwordError ? "focus:ring-red-500" : "focus:ring-blue-500"
+                  } ${
+                    passwordError
+                      ? "focus:border-red-500"
+                      : "focus:border-blue-500"
+                  }`}
                   placeholder="••••••••"
                 />
               </div>
@@ -396,9 +428,20 @@ const Signup = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border ${
+                    passwordError ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:outline-none focus:ring-2 ${
+                    passwordError ? "focus:ring-red-500" : "focus:ring-blue-500"
+                  } ${
+                    passwordError
+                      ? "focus:border-red-500"
+                      : "focus:border-blue-500"
+                  }`}
                   placeholder="••••••••"
                 />
+                {passwordError && (
+                  <p className="mt-1 text-sm text-red-600">{passwordError}</p>
+                )}
               </div>
 
               <div className="flex justify-end">
@@ -407,7 +450,12 @@ const Signup = () => {
                   onClick={nextStep}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className={`px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${
+                    passwordError
+                      ? "bg-blue-300 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  }`}
+                  disabled={!!passwordError}
                 >
                   Next
                 </motion.button>
@@ -684,44 +732,52 @@ const Signup = () => {
                   <p className="font-medium text-sm text-gray-700 mb-1">
                     Skills You Can Teach
                   </p>
-                  <ul className="list-disc list-inside">
-                    {formData.teachSkills
-                      .filter((s) => s.skill)
-                      .map((skillObj, index) => (
-                        <li
-                          key={`teach-review-${index}`}
-                          className="text-gray-800 mb-1"
-                        >
-                          {skillObj.skill}
-                          {skillObj.tag && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {skillObj.tag}
+                  {formData.teachSkills.some(skill => skill.skill.trim()) ? (
+                    <ul className="list-disc list-inside">
+                      {formData.teachSkills
+                        .filter((skill) => skill.skill.trim())
+                        .map((skillObj, index) => (
+                          <li
+                            key={`teach-review-${index}`}
+                            className="text-gray-800 mb-1"
+                          >
+                            {skillObj.skill}
+                            {skillObj.tag && (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {skillObj.tag}
+                              </span>
+                            )}
+                            <span className="text-gray-500 ml-1">
+                              ({skillObj.proficiency})
                             </span>
-                          )}
-                          <span className="text-gray-500 ml-1">
-                            ({skillObj.proficiency})
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">No teaching skills added</p>
+                  )}
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
                   <p className="font-medium text-sm text-gray-700 mb-1">
                     Skills You Want to Learn
                   </p>
-                  <ul className="list-disc list-inside">
-                    {formData.learnSkills
-                      .filter((s) => s)
-                      .map((skill, index) => (
-                        <li
-                          key={`learn-review-${index}`}
-                          className="text-gray-800"
-                        >
-                          {skill}
-                        </li>
-                      ))}
-                  </ul>
+                  {formData.learnSkills.some(skill => skill.trim()) ? (
+                    <ul className="list-disc list-inside">
+                      {formData.learnSkills
+                        .filter((skill) => skill.trim())
+                        .map((skill, index) => (
+                          <li
+                            key={`learn-review-${index}`}
+                            className="text-gray-800"
+                          >
+                            {skill}
+                          </li>
+                        ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">No learning skills added</p>
+                  )}
                 </div>
               </div>
 

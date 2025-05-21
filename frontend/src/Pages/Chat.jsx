@@ -946,9 +946,6 @@ export default function ChatApplication() {
                 <h3 className="font-medium text-gray-900">
                   {selectedUser.name}
                 </h3>
-                <p className="text-xs text-gray-500">
-                  {selectedUser.status === "online" ? "Online" : "Offline"}
-                </p>
               </div>
             </div>
           </div>
