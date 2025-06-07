@@ -1,7 +1,8 @@
 {
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "echo \"No tests\" && exit 0"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
